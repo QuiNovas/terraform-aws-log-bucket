@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "log" {
-  acl     = "log-delivery-write"
-  bucket  = "${var.name_prefix}-log"
+  acl    = "log-delivery-write"
+  bucket = "${var.name_prefix}-log"
   lifecycle {
     prevent_destroy = true
   }
@@ -9,12 +9,12 @@ resource "aws_s3_bucket" "log" {
     enabled = true
 
     transition {
-      days          = "${var.transition_to_glacier}"
+      days          = var.transition_to_glacier
       storage_class = "GLACIER"
     }
 
     expiration {
-      days = "${var.expiration}"
+      days = var.expiration
     }
   }
   server_side_encryption_configuration {
@@ -26,53 +26,53 @@ resource "aws_s3_bucket" "log" {
   }
 }
 
-data "aws_elb_service_account" "main" {}
+data "aws_elb_service_account" "main" {
+}
 
 data "aws_iam_policy_document" "log" {
-
   statement {
-    actions   = [
-      "s3:PutObject"
+    actions = [
+      "s3:PutObject",
     ]
     principals {
       identifiers = [
-        "${data.aws_elb_service_account.main.arn}"
+        data.aws_elb_service_account.main.arn,
       ]
       type = "AWS"
     }
     resources = [
-      "${aws_s3_bucket.log.arn}/elb/*"
+      "${aws_s3_bucket.log.arn}/elb/*",
     ]
-    sid       = "EnableELBLogging"
+    sid = "EnableELBLogging"
   }
 
   statement {
     actions = [
-      "s3:*"
+      "s3:*",
     ]
     condition {
       test = "Bool"
       values = [
-        "false"
+        "false",
       ]
       variable = "aws:SecureTransport"
     }
     effect = "Deny"
     principals {
       identifiers = [
-        "*"
+        "*",
       ]
       type = "AWS"
     }
     resources = [
-      "${aws_s3_bucket.log.arn}",
-      "${aws_s3_bucket.log.arn}/*"
+      aws_s3_bucket.log.arn,
+      "${aws_s3_bucket.log.arn}/*",
     ]
     sid = "DenyUnsecuredTransport"
   }
 }
 
 resource "aws_s3_bucket_policy" "log" {
-  bucket = "${aws_s3_bucket.log.id}"
-  policy = "${data.aws_iam_policy_document.log.json}"
+  bucket = aws_s3_bucket.log.id
+  policy = data.aws_iam_policy_document.log.json
 }
