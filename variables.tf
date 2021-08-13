@@ -14,3 +14,9 @@ variable "transition_to_glacier" {
   description = "The number of days to wait before transitioning an object to Glacier"
   type        = number
 }
+
+variable "tags" {
+  description = "(Optional) A mapping of tags to assign to the resources"
+  type        = map(string)
+  default     = {}
+}
