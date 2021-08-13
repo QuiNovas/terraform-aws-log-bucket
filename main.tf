@@ -25,7 +25,7 @@ resource "aws_s3_bucket" "log" {
     }
   }
 
-  tags = variables.tags
+  tags = var.tags
 }
 
 data "aws_elb_service_account" "main" {
