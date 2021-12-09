@@ -20,3 +20,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "name_postfix" {
+  default     = ""
+  description = "The name postfix to use when creating resource names"
+  type        = string
+}
