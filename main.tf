@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "log" {
   acl    = "log-delivery-write"
-  bucket = "${var.name_prefix}-log"
+  bucket = "${var.name_postfix}" == "" ? "${var.name_prefix}-log" : "${var.name_prefix}-log-${var.name_postfix}"
   lifecycle {
     prevent_destroy = true
   }
