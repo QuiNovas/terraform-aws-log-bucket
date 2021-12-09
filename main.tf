@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "log" {
   acl    = "log-delivery-write"
-  bucket = "${var.name_prefix}-log"
+  bucket = local.s3_log_bucket_name
   lifecycle {
     prevent_destroy = true
   }
