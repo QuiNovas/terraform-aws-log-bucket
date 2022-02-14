@@ -1,31 +1,44 @@
 resource "aws_s3_bucket" "log" {
-  acl    = "log-delivery-write"
   bucket = local.s3_log_bucket_name
   lifecycle {
     prevent_destroy = true
   }
-  lifecycle_rule {
-    id      = "log"
-    enabled = true
+
+  tags = var.tags
+}
+
+resource "aws_s3_bucket_acl" "log" {
+  bucket = aws_s3_bucket.log.id
+  acl    = "log-delivery-write"
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "log" {
+  bucket = aws_s3_bucket.log.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "log" {
+  bucket = aws_s3_bucket.log.bucket
+
+  rule {
+    id = "log"
+
+    expiration {
+      days = var.expiration
+    }
+
+    status = "Enabled"
 
     transition {
       days          = var.transition_to_glacier
       storage_class = "GLACIER"
     }
-
-    expiration {
-      days = var.expiration
-    }
   }
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
-
-  tags = var.tags
 }
 
 data "aws_elb_service_account" "main" {
