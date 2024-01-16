@@ -7,11 +7,6 @@ resource "aws_s3_bucket" "log" {
   tags = var.tags
 }
 
-resource "aws_s3_bucket_acl" "log" {
-  bucket = aws_s3_bucket.log.id
-  acl    = "log-delivery-write"
-}
-
 resource "aws_s3_bucket_server_side_encryption_configuration" "log" {
   bucket = aws_s3_bucket.log.bucket
 
@@ -42,6 +37,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "log" {
 }
 
 data "aws_elb_service_account" "main" {
+}
+
+data "aws_caller_identity" "current" {
 }
 
 data "aws_iam_policy_document" "log" {
@@ -84,6 +82,25 @@ data "aws_iam_policy_document" "log" {
       "${aws_s3_bucket.log.arn}/*",
     ]
     sid = "DenyUnsecuredTransport"
+  }
+
+  statement {
+    actions = [
+      "s3:PutObject",
+    ]
+    condition {
+      test = "StringEquals"
+      values = [data.aws_caller_identity.current.account_id]
+      variable = "aws:SourceAccount"
+    }
+    principals {
+      identifiers = ["logging.s3.amazonaws.com"]
+      type = "Service"
+    }
+    resources = [
+      "${aws_s3_bucket.log.arn}/s3/*"
+    ]
+    sid = "EnableS3Logging"
   }
 }
 
